@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Misi Jejak Virus - Makmal Jejak Virus</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Tone.js untuk kesan bunyi makmal ceria -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        * {
+            font-family: 'Nunito', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #10264D 0%, #342665 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Animasi terapung lembut untuk hiasan makmal di tepi */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(4deg); }
+        }
+        @keyframes floatReverse {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(10px) rotate(-5deg); }
+        }
+        .float-slow {
+            animation: floatSlow 5s ease-in-out infinite;
+        }
+        .float-reverse {
+            animation: floatReverse 6s ease-in-out infinite;
+        }
+
+        /* Kad Soalan & Jawapan Cerah */
+        .lab-card {
+            background-color: #F8FAFC;
+            color: #172554;
+            border: 3px solid #E2E8F0;
+            box-shadow: 0 8px 0 rgba(15, 23, 42, 0.35);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Keadaan kad jawapan apabila disasarkan atau betul/salah */
+        .answer-card.targeted {
+            border-color: #67E8F9;
+            background-color: #ECFEFF;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 0 rgba(103, 232, 249, 0.35), 0 0 18px rgba(103, 232, 249, 0.45);
+        }
+
+        @keyframes popCorrect {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
+        .answer-card.correct {
+            border-color: #10B981 !important;
+            background-color: #D1FAE5 !important;
+            color: #065F46 !important;
+            box-shadow: 0 8px 0 #059669 !important;
+            animation: popCorrect 0.45s ease-out forwards;
+        }
+
+        .answer-card.wrong {
+            border-color: #F43F5E !important;
+            background-color: #FFE4E6 !important;
+            color: #881337 !important;
+            box-shadow: 0 8px 0 #E11D48 !important;
+        }
+
+        /* Butang Utama */
+        .btn-cyan {
+            background-color: #67E8F9;
+            color: #172554;
+            box-shadow: 0 6px 0 #0891B2;
+            transition: all 0.15s ease;
+        }
+        .btn-cyan:hover {
+            background-color: #A5F3FC;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #0891B2;
+        }
+        .btn-cyan:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0891B2;
+        }
+
+        .btn-pink {
+            background-color: #F9A8D4;
+            color: #172554;
+            box-shadow: 0 6px 0 #DB2777;
+            transition: all 0.15s ease;
+        }
+        .btn-pink:hover {
+            background-color: #FBCFE8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #DB2777;
+        }
+        .btn-pink:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #DB2777;
+        }
+
+        .btn-yellow {
+            background-color: #FDE68A;
+            color: #172554;
+            box-shadow: 0 6px 0 #D97706;
+            transition: all 0.15s ease;
+        }
+        .btn-yellow:hover {
+            background-color: #FEF08A;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #D97706;
+        }
+        .btn-yellow:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #D97706;
+        }
+
+        /* Penunjuk Bulatan Tenaga Bercahaya (Menggantikan Perisai) */
+        #energy-cursor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 84px;
+            height: 84px;
+            margin-left: -42px;
+            margin-top: -42px;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            will-change: transform;
+        }
+
+        .energy-orb-core {
+            width: 34px;
+            height: 34px;
+            border-radius: 9999px;
+            background: radial-gradient(circle, #FFFFFF 15%, #67E8F9 65%, rgba(103, 232, 249, 0) 100%);
+            box-shadow: 0 0 18px #67E8F9, 0 0 32px #F9A8D4;
+            animation: pulseOrb 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseOrb {
+            0% { transform: scale(0.92); opacity: 0.9; }
+            100% { transform: scale(1.08); opacity: 1; }
+        }
+
+        /* Video Kamera dicerminkan */
+        .mirror-video {
+            transform: scaleX(-1);
+        }
+
+        /* Ukuran Teks Khusus mengikut Spesifikasi */
+        @media (min-width: 1024px) {
+            .question-typography {
+                font-size: 28px;
+                line-height: 1.35;
+                font-weight: 600;
+            }
+            .answer-typography {
+                font-size: 22px;
+                line-height: 1.35;
+                font-weight: 600;
+            }
+        }
+        @media (max-width: 1023px) {
+            .question-typography {
+                font-size: 20px;
+                line-height: 1.35;
+                font-weight: 600;
+            }
+            .answer-typography {
+                font-size: 17px;
+                line-height: 1.35;
+                font-weight: 600;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col justify-between relative">
+
+    <!-- ==================== HIASAN TEPI MAKMAL (MOLEKUL, KANTA PEMBESAR, PARTIKEL VIRUS) ==================== -->
+    <div class="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <!-- Kiri Atas: Partikel Virus Kartun (Merah Jambu & Sian) -->
+        <svg class="w-24 h-24 md:w-32 md:h-32 absolute top-6 left-4 md:left-8 opacity-85 float-slow" viewBox="0 0 120 120" fill="none">
+            <circle cx="60" cy="60" r="30" fill="#F9A8D4" stroke="#172554" stroke-width="4"/>
+            <!-- Paku Virus Bulat -->
+            <line x1="60" y1="12" x2="60" y2="30" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="60" cy="10" r="7" fill="#67E8F9" stroke="#172554" stroke-width="3"/>
+            <line x1="60" y1="90" x2="60" y2="108" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="60" cy="110" r="7" fill="#67E8F9" stroke="#172554" stroke-width="3"/>
+            <line x1="12" y1="60" x2="30" y2="60" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="10" cy="60" r="7" fill="#67E8F9" stroke="#172554" stroke-width="3"/>
+            <line x1="90" y1="60" x2="108" y2="60" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="110" cy="60" r="7" fill="#67E8F9" stroke="#172554" stroke-width="3"/>
+            <line x1="25" y1="25" x2="39" y2="39" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="23" cy="23" r="6" fill="#FDE68A" stroke="#172554" stroke-width="3"/>
+            <line x1="81" y1="81" x2="95" y2="95" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="97" cy="97" r="6" fill="#FDE68A" stroke="#172554" stroke-width="3"/>
+            <line x1="95" y1="25" x2="81" y2="39" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="97" cy="23" r="6" fill="#FDE68A" stroke="#172554" stroke-width="3"/>
+            <line x1="39" y1="81" x2="25" y2="95" stroke="#F9A8D4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="23" cy="97" r="6" fill="#FDE68A" stroke="#172554" stroke-width="3"/>
+            <!-- Bintik Comel -->
+            <circle cx="50" cy="52" r="5" fill="#172554" opacity="0.25"/>
+            <circle cx="70" cy="65" r="7" fill="#172554" opacity="0.25"/>
+            <circle cx="52" cy="70" r="4" fill="#172554" opacity="0.25"/>
+        </svg>
+
+        <!-- Kanan Atas: Molekul Sains Bercantum -->
+        <svg class="w-24 h-24 md:w-36 md:h-36 absolute top-6 right-4 md:right-8 opacity-85 float-reverse" viewBox="0 0 140 140" fill="none">
+            <line x1="40" y1="75" x2="85" y2="40" stroke="#67E8F9" stroke-width="7" stroke-linecap="round"/>
+            <line x1="40" y1="75" x2="95" y2="100" stroke="#67E8F9" stroke-width="7" stroke-linecap="round"/>
+            <circle cx="40" cy="75" r="20" fill="#67E8F9" stroke="#172554" stroke-width="4"/>
+            <circle cx="85" cy="40" r="15" fill="#FDE68A" stroke="#172554" stroke-width="4"/>
+            <circle cx="95" cy="100" r="17" fill="#F9A8D4" stroke="#172554" stroke-width="4"/>
+            <circle cx="34" cy="69" r="5" fill="#FFFFFF" opacity="0.7"/>
+        </svg>
+
+        <!-- Kiri Bawah: Kanta Pembesar Makmal -->
+        <svg class="w-24 h-24 md:w-32 md:h-32 absolute bottom-6 left-4 md:left-10 opacity-85 float-reverse" viewBox="0 0 120 120" fill="none">
+            <line x1="74" y1="74" x2="104" y2="104" stroke="#FDE68A" stroke-width="14" stroke-linecap="round"/>
+            <line x1="74" y1="74" x2="104" y2="104" stroke="#172554" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="52" cy="52" r="32" fill="#10264D" stroke="#67E8F9" stroke-width="8"/>
+            <circle cx="52" cy="52" r="24" fill="#67E8F9" fill-opacity="0.2"/>
+            <!-- Silau Kanta -->
+            <path d="M36 40 A16 16 0 0 1 56 32" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+            <!-- Partikel Mikro dalam Kanta -->
+            <circle cx="54" cy="55" r="7" fill="#F9A8D4"/>
+            <circle cx="43" cy="60" r="4" fill="#FDE68A"/>
+        </svg>
+
+        <!-- Kanan Bawah: Partikel Virus Kuning & Sian -->
+        <svg class="w-20 h-20 md:w-28 md:h-28 absolute bottom-6 right-4 md:right-10 opacity-85 float-slow" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="22" fill="#FDE68A" stroke="#172554" stroke-width="4"/>
+            <circle cx="50" cy="16" r="6" fill="#F9A8D4" stroke="#172554" stroke-width="3"/>
+            <line x1="50" y1="22" x2="50" y2="28" stroke="#172554" stroke-width="4"/>
+            <circle cx="50" cy="84" r="6" fill="#F9A8D4" stroke="#172554" stroke-width="3"/>
+            <line x1="50" y1="72" x2="50" y2="78" stroke="#172554" stroke-width="4"/>
+            <circle cx="16" cy="50" r="6" fill="#67E8F9" stroke="#172554" stroke-width="3"/>
+            <line x1="22" y1="50" x2="28" y2="50" stroke="#172554" stroke-width="4"/>
+            <circle cx="84" cy="50" r="6" fill="#67E8F9" stroke="#172554" stroke-width="3"/>
+            <line x1="72" y1="50" x2="78" y2="50" stroke="#172554" stroke-width="4"/>
+            <circle cx="44" cy="46" r="4" fill="#172554" opacity="0.25"/>
+            <circle cx="57" cy="54" r="5" fill="#172554" opacity="0.25"/>
+        </svg>
+    </div>
+
+    <!-- ==================== PENUNJUK BULATAN TENAGA BERCAHAYA (GELANG 2 SAAT) ==================== -->
+    <div id="energy-cursor" class="flex items-center justify-center">
+        <!-- Gelang Kemajuan 2 Saat -->
+        <svg class="w-full h-full -rotate-90 absolute inset-0" viewBox="0 0 84 84">
+            <circle cx="42" cy="42" r="34" stroke="rgba(255, 255, 255, 0.25)" stroke-width="6" fill="none" />
+            <circle id="dwell-ring" cx="42" cy="42" r="34" stroke="#FDE68A" stroke-width="7" fill="none"
+                stroke-dasharray="213.6" stroke-dashoffset="213.6" stroke-linecap="round" />
+        </svg>
+        <!-- Teras Bulatan Tenaga -->
+        <div class="energy-orb-core"></div>
+    </div>
+
+    <!-- ==================== 1. MUKA DEPAN (START SCREEN) ==================== -->
+    <main id="start-screen" class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 min-h-screen">
+        <div class="max-w-2xl w-full text-center flex flex-col items-center bg-[#10264D]/60 border-2 border-[#67E8F9]/30 rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl backdrop-blur-sm">
+            
+            <!-- Lencana Kecil Makmal -->
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#172554] border border-[#67E8F9] text-[#67E8F9] text-sm sm:text-base font-bold mb-5">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="M20 20l-4-4"/>
+                </svg>
+                <span>MAKMAL JEJAK VIRUS • TAHUN 4</span>
+            </div>
+
+            <!-- Tajuk Utama (Sangat Tebal, Tiada Cahaya Berlebihan) -->
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-[#67E8F9] mb-3">
+                MISI JEJAK VIRUS
+            </h1>
+
+            <!-- Subtajuk -->
+            <p class="text-lg sm:text-2xl text-[#FDE68A] font-semibold mb-8 max-w-lg">
+                Kenali punca dan penularan influenza
+            </p>
+
+            <!-- Hiasan Ikon Mikro Makmal (Bukan Manusia/Superhero) -->
+            <div class="flex items-center justify-center gap-6 mb-8">
+                <!-- Ikon Molekul -->
+                <div class="w-14 h-14 rounded-2xl bg-[#172554] border-2 border-[#F9A8D4] flex items-center justify-center">
+                    <svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+                        <line x1="12" y1="26" x2="26" y2="12" stroke="#67E8F9" stroke-width="3"/>
+                        <line x1="12" y1="26" x2="28" y2="28" stroke="#67E8F9" stroke-width="3"/>
+                        <circle cx="12" cy="26" r="6" fill="#F9A8D4"/>
+                        <circle cx="26" cy="12" r="5" fill="#FDE68A"/>
+                        <circle cx="28" cy="28" r="5" fill="#67E8F9"/>
+                    </svg>
+                </div>
+                <!-- Ikon Kanta Pembesar -->
+                <div class="w-16 h-16 rounded-2xl bg-[#172554] border-2 border-[#67E8F9] flex items-center justify-center">
+                    <svg class="w-9 h-9" viewBox="0 0 40 40" fill="none">
+                        <circle cx="18" cy="18" r="10" stroke="#67E8F9" stroke-width="3.5" fill="#10264D"/>
+                        <line x1="25" y1="25" x2="34" y2="34" stroke="#FDE68A" stroke-width="4.5" stroke-linecap="round"/>
+                        <circle cx="18" cy="18" r="4" fill="#F9A8D4"/>
+                    </svg>
+                </div>
+                <!-- Ikon Virus Kartun -->
+                <div class="w-14 h-14 rounded-2xl bg-[#172554] border-2 border-[#FDE68A] flex items-center justify-center">
+                    <svg class="w-8 h-8" viewBox="0 0 40 40" fill="none">
+                        <circle cx="20" cy="20" r="9" fill="#FDE68A"/>
+                        <circle cx="20" cy="6" r="2.5" fill="#F9A8D4"/>
+                        <circle cx="20" cy="34" r="2.5" fill="#F9A8D4"/>
+                        <circle cx="6" cy="20" r="2.5" fill="#67E8F9"/>
+                        <circle cx="34" cy="20" r="2.5" fill="#67E8F9"/>
+                        <circle cx="18" cy="18" r="2" fill="#172554"/>
+                        <circle cx="23" cy="22" r="2.5" fill="#172554"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Dua Butang Pilihan Mod Permainan -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-xl mb-6">
+                <button id="btn-mode-camera" class="btn-cyan w-full sm:w-1/2 py-4 px-6 rounded-2xl font-extrabold text-lg sm:text-xl flex items-center justify-center gap-3 cursor-pointer">
+                    <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>Main dengan Kamera</span>
+                </button>
+
+                <button id="btn-mode-touch" class="btn-pink w-full sm:w-1/2 py-4 px-6 rounded-2xl font-extrabold text-lg sm:text-xl flex items-center justify-center gap-3 cursor-pointer">
+                    <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+                    </svg>
+                    <span>Main dengan Sentuhan</span>
+                </button>
+            </div>
+
+            <!-- Arahan Ringkas -->
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#172554]/90 border border-[#FDE68A]/50 text-[#FDE68A] font-semibold text-base sm:text-lg">
+                <span>✨ Arahan: Gerakkan tangan, pilih jawapan!</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== 2. HALAMAN PERMAINAN (GAME SCREEN) ==================== -->
+    <section id="game-screen" class="hidden relative z-10 w-full max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex-1 flex flex-col justify-between min-h-screen lg:h-screen lg:max-h-screen overflow-y-auto lg:overflow-hidden">
+        
+        <!-- BAR ATAS: Kemajuan, Markah & Panel Khas Pratonton Kamera -->
+        <header class="w-full bg-[#10264D]/90 border-2 border-[#67E8F9]/40 rounded-2xl px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-lg">
+            
+            <!-- Kiri: Tajuk Kecil & Butang Utama -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button id="btn-back-home" class="px-3 py-1.5 rounded-xl bg-[#172554] hover:bg-[#1e316d] border border-[#67E8F9]/50 text-[#67E8F9] font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer" title="Kembali ke Muka Depan">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Muka Depan</span>
+                </button>
+                <span class="hidden md:inline-block font-black text-[#67E8F9] text-base tracking-wide">
+                    MAKMAL JEJAK VIRUS
+                </span>
+            </div>
+
+            <!-- Tengah: Kemajuan Soalan & Markah -->
+            <div class="flex items-center gap-3 sm:gap-5">
+                <!-- Kemajuan -->
+                <div class="flex items-center gap-2 bg-[#172554] px-3 py-1.5 rounded-xl border border-[#67E8F9]/40">
+                    <span class="text-xs sm:text-sm font-bold text-[#67E8F9]">SOALAN</span>
+                    <span id="progress-badge" class="text-sm sm:text-base font-extrabold text-white">1 / 5</span>
+                    <div class="hidden sm:block w-20 h-2.5 bg-[#10264D] rounded-full overflow-hidden">
+                        <div id="progress-bar-fill" class="h-full bg-[#67E8F9] transition-all duration-300" style="width: 20%;"></div>
+                    </div>
+                </div>
+
+                <!-- Markah -->
+                <div class="flex items-center gap-2 bg-[#172554] px-3.5 py-1.5 rounded-xl border border-[#FDE68A]/50">
+                    <span class="text-xs sm:text-sm font-bold text-[#FDE68A]">MARKAH</span>
+                    <span id="score-badge" class="text-sm sm:text-base font-extrabold text-white">0</span>
+                </div>
+            </div>
+
+            <!-- Kanan: Panel Khas Pratonton Kamera (Tidak menutup soalan atau jawapan) -->
+            <div class="flex items-center gap-2">
+                <div id="camera-panel" class="flex items-center gap-2 bg-[#172554] px-2.5 py-1 rounded-xl border border-[#F9A8D4]/60">
+                    <div class="relative w-16 h-11 sm:w-20 sm:h-12 rounded-lg overflow-hidden bg-slate-900 border border-[#67E8F9] shrink-0">
+                        <video id="webcam-video" autoplay playsinline muted class="w-full h-full object-cover mirror-video hidden"></video>
+                        <canvas id="motion-canvas" width="64" height="48" class="hidden"></canvas>
+                        <div id="camera-placeholder" class="w-full h-full flex items-center justify-center text-[10px] text-[#67E8F9] font-semibold text-center px-1">
+                            Mod Sentuh
+                        </div>
+                        <!-- Titik pengesan gerakan pada pratonton -->
+                        <div id="cam-tracker-dot" class="hidden absolute w-2.5 h-2.5 rounded-full bg-[#67E8F9] border border-white -translate-x-1/2 -translate-y-1/2 pointer-events-none" style="left:50%;top:50%;"></div>
+                    </div>
+                    <div class="hidden xl:flex flex-col text-left">
+                        <span id="control-status-label" class="text-xs font-bold text-[#F9A8D4]">Kawalan Tangan</span>
+                        <span class="text-[11px] text-slate-200">Tahan 2s pada kad</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- RUANG TENGAH: Kotak Soalan Padat & 3 Kad Jawapan Sebaris -->
+        <div class="flex-1 flex flex-col justify-center gap-3 sm:gap-4 my-2">
+            
+            <!-- KOTAK SOALAN (Dikecilkan & dikurangkan ruang kosong, warna cerah, tulisan #172554) -->
+            <div class="lab-card rounded-2xl px-4 py-3 sm:px-6 sm:py-4 w-full max-w-4xl mx-auto text-center shrink-0">
+                <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#172554] text-[#67E8F9] text-xs font-bold mb-1.5">
+                    <span id="question-tag">UJIAN MAKMAL 1</span>
+                </div>
+                <h2 id="question-text" class="question-typography text-[#172554]">
+                    Apakah punca utama jangkitan penyakit Influenza?
+                </h2>
+            </div>
+
+            <!-- 3 KAD JAWAPAN SAMA BESAR DALAM SATU BARIS -->
+            <div id="answers-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 w-full items-stretch shrink-0">
+                
+                <!-- Kad Jawapan A -->
+                <div data-index="0" class="answer-card lab-card rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between cursor-pointer relative min-h-[105px] lg:min-h-[155px]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#172554] text-[#67E8F9] font-extrabold text-base sm:text-lg flex items-center justify-center shrink-0">
+                            A
+                        </span>
+                        <span class="option-status-icon hidden text-xl font-black"></span>
+                    </div>
+                    <p class="answer-typography text-[#172554] text-left flex-1 flex items-center">
+                        Jangkitan Virus Influenza
+                    </p>
+                </div>
+
+                <!-- Kad Jawapan B -->
+                <div data-index="1" class="answer-card lab-card rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between cursor-pointer relative min-h-[105px] lg:min-h-[155px]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#172554] text-[#F9A8D4] font-extrabold text-base sm:text-lg flex items-center justify-center shrink-0">
+                            B
+                        </span>
+                        <span class="option-status-icon hidden text-xl font-black"></span>
+                    </div>
+                    <p class="answer-typography text-[#172554] text-left flex-1 flex items-center">
+                        Terlalu banyak minum air kosong
+                    </p>
+                </div>
+
+                <!-- Kad Jawapan C -->
+                <div data-index="2" class="answer-card lab-card rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between cursor-pointer relative min-h-[105px] lg:min-h-[155px]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#172554] text-[#FDE68A] font-extrabold text-base sm:text-lg flex items-center justify-center shrink-0">
+                            C
+                        </span>
+                        <span class="option-status-icon hidden text-xl font-black"></span>
+                    </div>
+                    <p class="answer-typography text-[#172554] text-left flex-1 flex items-center">
+                        Gigitan nyamuk tiruk pada waktu malam
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- PANEL PENERANGAN & BUTANG "SETERUSNYA" (Kemas & Muncul Selepas Jawapan Disahkan) -->
+            <div id="feedback-container" class="w-full max-w-4xl mx-auto shrink-0 min-h-[78px] flex items-center justify-center">
+                <!-- Arahan Semasa Menjawab -->
+                <div id="active-hint-bar" class="w-full bg-[#10264D]/80 border border-[#67E8F9]/30 rounded-2xl px-4 py-2.5 flex items-center justify-between text-xs sm:text-sm text-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-3 h-3 rounded-full bg-[#67E8F9]"></span>
+                        <span>Halakan <strong>Bulatan Tenaga</strong> pada kad jawapan selama <strong>2 saat</strong> atau klik terus.</span>
+                    </div>
+                    <button id="btn-toggle-mode" class="px-3 py-1 rounded-lg bg-[#172554] text-[#FDE68A] border border-[#FDE68A]/40 font-bold text-xs cursor-pointer hover:bg-[#1e316d]">
+                        Tukar Kawalan
+                    </button>
+                </div>
+
+                <!-- Kotak Penerangan & Butang Seterusnya -->
+                <div id="explanation-panel" class="hidden w-full bg-[#F8FAFC] border-3 border-[#67E8F9] rounded-2xl px-4 py-3 sm:px-6 sm:py-3.5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-[#172554]">
+                    <div class="flex items-start sm:items-center gap-3 text-left">
+                        <div id="feedback-badge" class="px-3 py-1 rounded-xl font-extrabold text-xs sm:text-sm shrink-0 bg-emerald-100 text-emerald-800 border border-emerald-400">
+                            TEPAT! +20
+                        </div>
+                        <p id="explanation-text" class="text-sm sm:text-base font-semibold text-[#172554] leading-snug">
+                            Influenza berpunca daripada virus influenza yang menyerang sistem pernafasan kita.
+                        </p>
+                    </div>
+                    <button id="btn-next-question" class="btn-yellow px-6 py-2.5 rounded-xl font-extrabold text-base sm:text-lg shrink-0 flex items-center gap-2 cursor-pointer">
+                        <span>Seterusnya</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bar Bawah Kecil -->
+        <footer class="text-center text-xs text-slate-300/80 py-1 shrink-0">
+            Makmal Jejak Virus • Pendidikan Kesihatan Tahun 4
+        </footer>
+    </section>
+
+    <!-- ==================== 3. SKRIN KEPUTUSAN AKHIR (RESULT SCREEN) ==================== -->
+    <section id="result-screen" class="hidden relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 min-h-screen">
+        <div class="max-w-xl w-full bg-[#F8FAFC] text-[#172554] border-4 border-[#67E8F9] rounded-3xl p-6 sm:p-10 text-center shadow-2xl">
+            <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-[#172554] text-[#FDE68A] font-bold text-sm mb-4">
+                <span>LAPORAN MAKMAL LENGKAP</span>
+            </div>
+
+            <h2 class="text-3xl sm:text-5xl font-black text-[#172554] mb-2">
+                SYABAS, SAINTIS MUDA!
+            </h2>
+            <p id="result-message" class="text-base sm:text-lg font-semibold text-slate-700 mb-6">
+                Anda berjaya mengenal pasti punca dan cara mencegah penularan virus influenza!
+            </p>
+
+            <!-- Kotak Markah Akhir -->
+            <div class="bg-[#172554] text-white rounded-2xl p-5 mb-6 flex items-center justify-around border-2 border-[#67E8F9]">
+                <div>
+                    <div class="text-xs sm:text-sm font-bold text-[#67E8F9]">JUMLAH MARKAH</div>
+                    <div id="final-score" class="text-4xl sm:text-5xl font-black text-[#FDE68A]">100</div>
+                </div>
+                <div class="h-12 w-0.5 bg-slate-600"></div>
+                <div>
+                    <div class="text-xs sm:text-sm font-bold text-[#F9A8D4]">JAWAPAN BETUL</div>
+                    <div id="final-correct" class="text-3xl sm:text-4xl font-black text-white">5 / 5</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button id="btn-play-again" class="btn-cyan px-6 py-3.5 rounded-2xl font-extrabold text-lg flex-1 cursor-pointer">
+                    Main Semula
+                </button>
+                <button id="btn-result-home" class="btn-pink px-6 py-3.5 rounded-2xl font-extrabold text-lg flex-1 cursor-pointer">
+                    Muka Depan
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== LOGIK PERMAINAN, KAMERA & GERAKAN TANGAN ==================== -->
+    <script>
+        /**
+         * DATA 5 SOALAN PENDIDIKAN INFLUENZA TAHUN 4
+         */
+        const QUESTIONS = [
+            {
+                tag: "UJIAN MAKMAL 1 • PUNCA JANGKITAN",
+                question: "Apakah punca utama jangkitan penyakit Influenza?",
+                options: [
+                    "Jangkitan Virus Influenza",
+                    "Terlalu banyak minum air kosong",
+                    "Gigitan nyamuk pada waktu malam"
+                ],
+                correct: 0,
+                explanation: "Betul! Influenza berpunca daripada jangkitan Virus Influenza yang menyerang saluran pernafasan."
+            },
+            {
+                tag: "UJIAN MAKMAL 2 • CARA PENULARAN",
+                question: "Bagaimanakah virus influenza paling mudah merebak kepada orang lain?",
+                options: [
+                    "Melalui cahaya matahari pagi",
+                    "Titisan pernafasan semasa batuk dan bersin",
+                    "Memakai pakaian yang bersih dan kemas"
+                ],
+                correct: 1,
+                explanation: "Tepat! Titisan air liur atau hingus ketika pesakit batuk dan bersin membawa partikel virus ke udara."
+            },
+            {
+                tag: "UJIAN MAKMAL 3 • GEJALA UTAMA",
+                question: "Antara berikut, yang manakah gejala lazim bagi murid yang dijangkiti influenza?",
+                options: [
+                    "Gigi tumbuh dengan lebih cepat",
+                    "Demam panas, batuk, sakit tekak dan lenguh badan",
+                    "Kuku tangan bertukar menjadi warna biru"
+                ],
+                correct: 1,
+                explanation: "Tahniah! Demam tinggi, batuk, sakit tekak dan keletihan ialah tanda utama jangkitan influenza."
+            },
+            {
+                tag: "UJIAN MAKMAL 4 • SENTUHAN PERMUKAAN",
+                question: "Apakah yang berlaku jika kita menyentuh tombol pintu yang tercemar dengan virus lalu menyentuh hidung?",
+                options: [
+                    "Virus boleh masuk ke dalam badan dan menyebabkan jangkitan",
+                    "Tangan kita akan menjadi lebih bersih serta wangi",
+                    "Virus akan hilang secara automatik dengan serta-merta"
+                ],
+                correct: 0,
+                explanation: "Benar! Tangan yang menyentuh permukaan tercemar boleh memindahkan virus ke mata, hidung atau mulut."
+            },
+            {
+                tag: "UJIAN MAKMAL 5 • LANGKAH PENCEGAHAN",
+                question: "Apakah amalan terbaik untuk mengelakkan penularan virus influenza di sekolah?",
+                options: [
+                    "Berkongsi sapu tangan dan botol air dengan rakan",
+                    "Kerap mencuci tangan dengan sabun dan menutup mulut ketika bersin",
+                    "Batuk secara terbuka ke arah makanan rakan"
+                ],
+                correct: 1,
+                explanation: "Hebat! Mencuci tangan dengan sabun dan mengamalkan adab batuk/bersin menghalang virus daripada merebak."
+            }
+        ];
+
+        /**
+         * KEADAAN PERMAINAN (GAME STATE)
+         */
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let isAnswered = false;
+        let gameActive = false;
+        let useCameraMode = false;
+
+        // Kedudukan Penunjuk Bulatan Tenaga
+        let cursorX = window.innerWidth / 2;
+        let cursorY = window.innerHeight / 2;
+        let targetCursorX = window.innerWidth / 2;
+        let targetCursorY = window.innerHeight / 2;
+
+        // Pemasa Gelang Kemajuan 2 Saat (2000ms)
+        const DWELL_DURATION = 2000; 
+        const RING_CIRCUMFERENCE = 213.6;
+        let hoveredElement = null;
+        let hoverStartTime = 0;
+        let lastFrameTime = performance.now();
+
+        // Pemboleh ubah Kamera & Pengesanan Gerakan Tangan
+        let mediaStream = null;
+        let prevFrameData = null;
+
+        // Elemen DOM
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const energyCursor = document.getElementById('energy-cursor');
+        const dwellRing = document.getElementById('dwell-ring');
+
+        const questionTag = document.getElementById('question-tag');
+        const questionText = document.getElementById('question-text');
+        const progressBadge = document.getElementById('progress-badge');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const scoreBadge = document.getElementById('score-badge');
+
+        const answerCards = Array.from(document.querySelectorAll('.answer-card'));
+        const activeHintBar = document.getElementById('active-hint-bar');
+        const explanationPanel = document.getElementById('explanation-panel');
+        const feedbackBadge = document.getElementById('feedback-badge');
+        const explanationText = document.getElementById('explanation-text');
+        const btnNextQuestion = document.getElementById('btn-next-question');
+
+        const webcamVideo = document.getElementById('webcam-video');
+        const motionCanvas = document.getElementById('motion-canvas');
+        const motionCtx = motionCanvas.getContext('2d', { willReadFrequently: true });
+        const cameraPlaceholder = document.getElementById('camera-placeholder');
+        const camTrackerDot = document.getElementById('cam-tracker-dot');
+        const controlStatusLabel = document.getElementById('control-status-label');
+
+        /**
+         * KESAN BUNYI MAKMAL CERIA (Tone.js)
+         */
+        let synth = null;
+        function initAudio() {
+            if (!synth && window.Tone) {
+                Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!synth) return;
+                const now = Tone.now();
+                if (type === 'hover') {
+                    synth.triggerAttackRelease("C5", "32n", now);
+                } else if (type === 'correct') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "8n", now);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease(["F3", "B3"], "8n", now);
+                } else if (type === 'win') {
+                    synth.triggerAttackRelease(["C5", "E5", "G5"], "16n", now);
+                    synth.triggerAttackRelease(["D5", "F5", "A5"], "16n", now + 0.15);
+                    synth.triggerAttackRelease(["E5", "G5", "C6"], "4n", now + 0.3);
+                }
+            } catch (e) {
+                // Abaikan jika audio disekat pelayar
+            }
+        }
+
+        /**
+         * FUNGSI KAMERA & PENGESANAN GERAKAN TANGAN
+         */
+        async function startCamera() {
+            try {
+                if (mediaStream) {
+                    useCameraMode = true;
+                    updateControlUI();
+                    return true;
+                }
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 320, height: 240, facingMode: "user" },
+                    audio: false
+                });
+                mediaStream = stream;
+                webcamVideo.srcObject = stream;
+                await webcamVideo.play();
+                useCameraMode = true;
+                prevFrameData = null;
+                updateControlUI();
+                return true;
+            } catch (err) {
+                // Jika kamera gagal atau tidak dibenarkan, tukar ke mod sentuhan secara lancar
+                useCameraMode = false;
+                updateControlUI();
+                return false;
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            webcamVideo.srcObject = null;
+            useCameraMode = false;
+            updateControlUI();
+        }
+
+        function updateControlUI() {
+            if (useCameraMode && mediaStream) {
+                webcamVideo.classList.remove('hidden');
+                cameraPlaceholder.classList.add('hidden');
+                camTrackerDot.classList.remove('hidden');
+                controlStatusLabel.textContent = "Kamera Aktif";
+            } else {
+                webcamVideo.classList.add('hidden');
+                cameraPlaceholder.classList.remove('hidden');
+                camTrackerDot.classList.add('hidden');
+                controlStatusLabel.textContent = "Sentuhan / Tetikus";
+            }
+        }
+
+        /**
+         * Mengesan pusat gerakan tangan daripada bingkai video kamera
+         */
+        function processCameraMotion() {
+            if (!useCameraMode || !mediaStream || webcamVideo.readyState < 2) return;
+
+            const w = motionCanvas.width;
+            const h = motionCanvas.height;
+
+            // Lukis imej video yang dicerminkan ke kanvas kecil
+            motionCtx.save();
+            motionCtx.scale(-1, 1);
+            motionCtx.drawImage(webcamVideo, -w, 0, w, h);
+            motionCtx.restore();
+
+            const currentFrame = motionCtx.getImageData(0, 0, w, h);
+            const data = currentFrame.data;
+
+            if (prevFrameData) {
+                let sumX = 0;
+                let sumY = 0;
+                let motionPixels = 0;
+
+                for (let y = 0; y < h; y += 2) {
+                    for (let x = 0; x < w; x += 2) {
+                        const i = (y * w + x) * 4;
+                        const diffR = Math.abs(data[i] - prevFrameData[i]);
+                        const diffG = Math.abs(data[i + 1] - prevFrameData[i + 1]);
+                        const diffB = Math.abs(data[i + 2] - prevFrameData[i + 2]);
+
+                        if (diffR + diffG + diffB > 75) {
+                            sumX += x;
+                            sumY += y;
+                            motionPixels++;
+                        }
+                    }
+                }
+
+                // Kemas kini sasaran penunjuk jika gerakan tangan mencukupi
+                if (motionPixels > 12) {
+                    const avgX = sumX / motionPixels;
+                    const avgY = sumY / motionPixels;
+
+                    // Petakan ruang tengah kamera supaya mudah mencapai tepi skrin
+                    const normX = Math.min(1, Math.max(0, (avgX - w * 0.15) / (w * 0.7)));
+                    const normY = Math.min(1, Math.max(0, (avgY - h * 0.15) / (h * 0.7)));
+
+                    targetCursorX = normX * window.innerWidth;
+                    targetCursorY = normY * window.innerHeight;
+
+                    // Kemas kini titik pada pratonton kamera
+                    camTrackerDot.style.left = `${normX * 100}%`;
+                    camTrackerDot.style.top = `${normY * 100}%`;
+                }
+            }
+
+            prevFrameData = new Uint8ClampedArray(data);
+        }
+
+        /**
+         * MEMULAKAN PERMAINAN & MEMAPARKAN SOALAN
+         */
+        async function startGame(withCamera) {
+            initAudio();
+            currentQuestionIndex = 0;
+            score = 0;
+            correctCount = 0;
+            isAnswered = false;
+            gameActive = true;
+
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            energyCursor.style.display = 'flex';
+
+            if (withCamera) {
+                await startCamera();
+            } else {
+                stopCamera();
+            }
+
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function loadQuestion(index) {
+            isAnswered = false;
+            hoveredElement = null;
+            resetDwellRing();
+
+            const q = QUESTIONS[index];
+            questionTag.textContent = q.tag;
+            questionText.textContent = q.question;
+
+            progressBadge.textContent = `${index + 1} / ${QUESTIONS.length}`;
+            progressBarFill.style.width = `${((index + 1) / QUESTIONS.length) * 100}%`;
+            scoreBadge.textContent = score;
+
+            // Paparkan semula kad jawapan dengan bersih
+            answerCards.forEach((card, idx) => {
+                card.classList.remove('targeted', 'correct', 'wrong');
+                const textEl = card.querySelector('p');
+                const iconEl = card.querySelector('.option-status-icon');
+                textEl.textContent = q.options[idx];
+                iconEl.classList.add('hidden');
+                iconEl.textContent = '';
+            });
+
+            // Sembunyikan panel penerangan & tunjukkan bar petunjuk
+            explanationPanel.classList.add('hidden');
+            activeHintBar.classList.remove('hidden');
+        }
+
+        /**
+         * MENGESAHKAN PILIHAN JAWAPAN
+         */
+        function selectAnswer(selectedIndex) {
+            if (isAnswered) return;
+            isAnswered = true;
+            resetDwellRing();
+
+            const q = QUESTIONS[currentQuestionIndex];
+            const isCorrect = selectedIndex === q.correct;
+
+            answerCards.forEach((card, idx) => {
+                card.classList.remove('targeted');
+                const iconEl = card.querySelector('.option-status-icon');
+
+                if (idx === q.correct) {
+                    card.classList.add('correct');
+                    iconEl.textContent = '✓';
+                    iconEl.classList.remove('hidden');
+                } else if (idx === selectedIndex && !isCorrect) {
+                    card.classList.add('wrong');
+                    iconEl.textContent = '✕';
+                    iconEl.classList.remove('hidden');
+                }
+            });
+
+            if (isCorrect) {
+                score += 20;
+                correctCount++;
+                scoreBadge.textContent = score;
+                feedbackBadge.textContent = "BETUL! +20 MARKAH";
+                feedbackBadge.className = "px-3 py-1 rounded-xl font-extrabold text-xs sm:text-sm shrink-0 bg-emerald-100 text-emerald-800 border border-emerald-400";
+                playSound('correct');
+            } else {
+                feedbackBadge.textContent = "KURANG TEPAT";
+                feedbackBadge.className = "px-3 py-1 rounded-xl font-extrabold text-xs sm:text-sm shrink-0 bg-rose-100 text-rose-800 border border-rose-400";
+                playSound('wrong');
+            }
+
+            explanationText.textContent = q.explanation;
+            activeHintBar.classList.add('hidden');
+            explanationPanel.classList.remove('hidden');
+
+            // Kemas kini teks butang jika soalan terakhir
+            const nextSpan = btnNextQuestion.querySelector('span');
+            if (currentQuestionIndex === QUESTIONS.length - 1) {
+                nextSpan.textContent = "Lihat Keputusan";
+            } else {
+                nextSpan.textContent = "Seterusnya";
+            }
+        }
+
+        function goToNextQuestion() {
+            if (currentQuestionIndex < QUESTIONS.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            gameActive = false;
+            energyCursor.style.display = 'none';
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-correct').textContent = `${correctCount} / ${QUESTIONS.length}`;
+
+            const msgEl = document.getElementById('result-message');
+            if (score === 100) {
+                msgEl.textContent = "Luar biasa! Anda pakar Makmal Jejak Virus dan memahami sepenuhnya cara mencegah influenza!";
+            } else if (score >= 60) {
+                msgEl.textContent = "Bagus sekali! Anda mengenali punca dan langkah pencegahan penularan virus influenza.";
+            } else {
+                msgEl.textContent = "Usaha yang baik! Mari ulang kaji semula supaya lebih mahir menjejak virus influenza.";
+            }
+
+            playSound('win');
+        }
+
+        /**
+         * PENGURUSAN GELANG KEMAJUAN 2 SAAT & PENUNJUK BULATAN TENAGA
+         */
+        function resetDwellRing() {
+            dwellRing.style.strokeDashoffset = RING_CIRCUMFERENCE;
+        }
+
+        function checkCursorHover(now) {
+            if (!gameActive) return;
+
+            let detectedTarget = null;
+
+            // Semak sama ada penunjuk berada di atas kad jawapan (semasa belum dijawab)
+            if (!isAnswered) {
+                for (const card of answerCards) {
+                    const rect = card.getBoundingClientRect();
+                    if (
+                        cursorX >= rect.left &&
+                        cursorX <= rect.right &&
+                        cursorY >= rect.top &&
+                        cursorY <= rect.bottom
+                    ) {
+                        detectedTarget = card;
+                        break;
+                    }
+                }
+            } else {
+                // Jika sudah dijawab, benarkan penunjuk mengaktifkan butang "Seterusnya" juga
+                const rect = btnNextQuestion.getBoundingClientRect();
+                if (
+                    rect.width > 0 &&
+                    cursorX >= rect.left &&
+                    cursorX <= rect.right &&
+                    cursorY >= rect.top &&
+                    cursorY <= rect.bottom
+                ) {
+                    detectedTarget = btnNextQuestion;
+                }
+            }
+
+            // Kemas kini kesan sasaran pada kad jawapan
+            answerCards.forEach(c => {
+                if (c === detectedTarget) {
+                    c.classList.add('targeted');
+                } else {
+                    c.classList.remove('targeted');
+                }
+            });
+
+            if (detectedTarget) {
+                if (hoveredElement !== detectedTarget) {
+                    hoveredElement = detectedTarget;
+                    hoverStartTime = now;
+                    playSound('hover');
+                } else {
+                    const elapsed = now - hoverStartTime;
+                    const progress = Math.min(1, elapsed / DWELL_DURATION);
+                    const offset = RING_CIRCUMFERENCE * (1 - progress);
+                    dwellRing.style.strokeDashoffset = offset;
+
+                    if (progress >= 1) {
+                        const targetToTrigger = hoveredElement;
+                        hoveredElement = null;
+                        resetDwellRing();
+
+                        if (targetToTrigger === btnNextQuestion) {
+                            goToNextQuestion();
+                        } else {
+                            const idx = parseInt(targetToTrigger.getAttribute('data-index'), 10);
+                            selectAnswer(idx);
+                        }
+                    }
+                }
+            } else {
+                hoveredElement = null;
+                resetDwellRing();
+            }
+        }
+
+        /**
+         * GELUNG ANIMASI UTAMA (GAME LOOP)
+         */
+        function animateLoop(now) {
+            if (gameActive) {
+                // Proses kamera jika mod kamera aktif
+                if (now - lastFrameTime > 50) {
+                    processCameraMotion();
+                    lastFrameTime = now;
+                }
+
+                // Gerakkan bulatan tenaga dengan licin (interpolasi)
+                cursorX += (targetCursorX - cursorX) * 0.22;
+                cursorY += (targetCursorY - cursorY) * 0.22;
+
+                energyCursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0)`;
+
+                checkCursorHover(now);
+            }
+
+            requestAnimationFrame(animateLoop);
+        }
+
+        /**
+         * PENDENGAR ACARA (EVENT LISTENERS)
+         */
+        // Gerakan Tetikus & Sentuhan
+        window.addEventListener('mousemove', (e) => {
+            targetCursorX = e.clientX;
+            targetCursorY = e.clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                targetCursorX = e.touches[0].clientX;
+                targetCursorY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                targetCursorX = e.touches[0].clientX;
+                targetCursorY = e.touches[0].clientY;
+                cursorX = targetCursorX;
+                cursorY = targetCursorY;
+            }
+        }, { passive: true });
+
+        // Klik terus pada kad jawapan untuk keselesaan tambahan pada telefon/tetikus
+        answerCards.forEach(card => {
+            card.addEventListener('click', () => {
+                if (!isAnswered) {
+                    const idx = parseInt(card.getAttribute('data-index'), 10);
+                    selectAnswer(idx);
+                }
+            });
+        });
+
+        // Butang Muka Depan
+        document.getElementById('btn-mode-camera').addEventListener('click', () => startGame(true));
+        document.getElementById('btn-mode-touch').addEventListener('click', () => startGame(false));
+
+        // Butang Navigasi dalam Permainan
+        btnNextQuestion.addEventListener('click', () => goToNextQuestion());
+
+        document.getElementById('btn-toggle-mode').addEventListener('click', async () => {
+            if (useCameraMode) {
+                stopCamera();
+            } else {
+                await startCamera();
+            }
+        });
+
+        document.getElementById('btn-back-home').addEventListener('click', () => {
+            gameActive = false;
+            stopCamera();
+            energyCursor.style.display = 'none';
+            gameScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        // Butang Skrin Keputusan
+        document.getElementById('btn-play-again').addEventListener('click', () => {
+            startGame(useCameraMode);
+        });
+
+        document.getElementById('btn-result-home').addEventListener('click', () => {
+            gameActive = false;
+            stopCamera();
+            energyCursor.style.display = 'none';
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        // Mulakan gelung animasi apabila halaman siap dimuatkan
+        window.onload = function () {
+            requestAnimationFrame(animateLoop);
+        };
+    </script>
+</body>
+</html>
